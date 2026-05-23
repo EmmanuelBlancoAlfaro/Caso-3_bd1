@@ -1,1 +1,2 @@
-## AQUI VIENE NUESTRO HERMOSO DISEÑO 
+> .[!NOTE].
+> Diseño de la base de datos xD
