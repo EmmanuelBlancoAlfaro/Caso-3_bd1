@@ -57,37 +57,37 @@
 |          				   Currency	                     	 | 
 ==============================================================
 ## Currencies
-- currencyId: serial auto-increment (PK)
+- currencyId: INT IDENTITY(1,1) (PK)
 - currencySymbol: VARCHAR (5)
 - currencyName: VARCHAR (40)
-- isActive: BOOLEAN
-- postTime: TIMESTAMP
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- isActive: BIT
+- postTime: DATETIME2
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 
 ## ExchangeRates
-- exchangeRateId: serial auto-increment (PK)
+- exchangeRateId: INT IDENTITY(1,1) (PK)
 - currencyId1: integer (FK)
 - currencyId2: integer (FK)
 - exchangeRate: DECIMAL (18, 6)
-- postTime: TIMESTAMP
-- checkSum: BYTEA
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- postTime: DATETIME2
+- checkSum: VARBINARY(MAX)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK) 
 
 ## ExchangeHistories
-- exchangeHistoryId: serial auto-increment (PK)
-- startDateTime: TIMESTAMP
-- endDateTime: TIMESTAMP
+- exchangeHistoryId: INT IDENTITY(1,1) (PK)
+- startDateTime: DATETIME2
+- endDateTime: DATETIME2
 - currencyId1: integer (FK)
 - currencyId2: integer (FK)
 - exchangeRate: DECIMAL (18, 6)
-- postTime: TIMESTAMP
-- checkSum: BYTEA
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- postTime: DATETIME2
+- checkSum: VARBINARY(MAX)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 - exchangeRateId: integer (FK)
 
@@ -96,41 +96,41 @@
 ==============================================================
 
 ## Countries
-- countryId: serial auto-increment (PK)
+- countryId: INT IDENTITY(1,1) (PK)
 - isoCode: UNIQUE VARCHAR (3) 
 - countryName: VARCHAR (50)
-- isActive: BOOLEAN
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- isActive: BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 
 ## States
-- stateId: serial auto-increment (PK)
+- stateId: INT IDENTITY(1,1) (PK)
 - countryId: integer (FK)
 - stateName: VARCHAR (40)
-- isActive: BOOLEAN
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- isActive: BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 
 ## Cities
-- cityId: serial auto-increment (PK)
+- cityId: INT IDENTITY(1,1) (PK)
 - stateId: integer (FK)
 - cityName: VARCHAR (50)
-- isActive: BOOLEAN
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- isActive: BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 
 ## Addresses
-- addressId: serial auto-increment (PK)
+- addressId: INT IDENTITY(1,1) (PK)
 - cityId: integer (FK)
 - address: VARCHAR (100)
 - zipCode: VARCHAR (20)
 - position: GEOGRAPHY
-- isActive: BOOLEAN
-- createdAt: TIMESTAMP
-- updatedAt: TIMESTAMP
+- isActive: BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 - updatedBy: integer (FK)
 
 
@@ -140,21 +140,21 @@
 ## FUNCION: Aqui nada mas son los usuarios del sistema, no hay mucha explicacion es bastante obvio todo
 
 ## users
-- userId : INT AUTO_INCREMENT (PK)			 	
+- userId : INT IDENTITY(1,1) (PK)			 	
 - name : VARCHAR(50)					
 - lastName : VARCHAR(50)				
 - email : VARCHAR(100)		
-- password : VARBINARY			
+- password : VARBINARY(MAX)		
 - phone : INT 							
-- creadetAt : TIMESTAMP					
-- enabled : BOOLEAN						
+- creadetAt : DATETIME2					
+- enabled : BIT						
 
 ## usersAddresses
-- userAddressId : INT AUTO_INCREMENT (PK)
+- userAddressId : INT IDENTITY(1,1) (PK)
 - userId : INT (FK)					
 - addressID : INT (FK)					
-- enabled : BOOLEAN						
-- checksum : VARBINARY					
+- enabled : BIT						
+- checksum : VARBINARY(MAX)					
 
 ## permision
 - permisionId : INT AUTO_INCREMENT (PK)
@@ -167,73 +167,102 @@
 |        					logs              	 	         |                                     
 ==============================================================
 ## sessions
-- sessionId : INT AUTO_INCREMENT (PK)
+- sessionId : INT IDENTITY(1,1) (PK)
 - userId : INT(FK)
 - sessionToken : VARCHAR(100)
-- creadetAt : TIMESTAMP
+- creadetAt : DATETIME2
 
 ## eventsTypes
-- eventTypeId : INT AUTO_INCREMENT (PK)
+- eventTypeId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(150)
 
 ## dataObjects
-- dataObjectId : INT AUTO_INCREMENT(PK)
+- dataObjectId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
 
 ## severities
-- severityId : INT AUTO_INCREMENT (PK)
+- severityId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
 
 ## usersLogs
-- logId : INT AUTO_INCREMENT(PK)
+- logId : INT IDENTITY(1,1) (PK)
 - eventType : INT(FK)
 - dataObjectId : INT(FK)
 - websiteId : INT(FK)
 - sessionId : INT(FK)
 - description : VARCHAR(255)
-- creadetAt : TIMESTAMP
-- metadata : JSON 			
+- creadetAt : DATETIME2
+- metadata : VARBINARY(MAX) 			
 
 ## systemErrorsLogs
-- errorId : INT AUTO_INCREMENT (PK)
+- errorId : INT IDENTITY(1,1) (PK)
 - severityId : INT (FK)
 - processUuid : VARCHAR(100)
 - processName : VARCHAR(100)
 - stepName : VARCHAR(100)
-- inputData : JSON
-- errorMesage : TEXT
+- inputData : VARBINARY(MAX)
+- errorMesage : VARBINARY(MAX)
 - creadetAt : DATE 
 
 ## statusTransactionType
-- statusTypeId : INT AUTO_INCREMENT (PK)
+- statusTypeId : INT IDENTITY(1,1) (PK)
 - statusName : VARCHAR(50) 
 - statusDescription : VARCHAR(150)
 
 ## spTransactionState
-- stateId : INT AUTO_INCREMENT (PK)
+- stateId : INT IDENTITY(1,1) (PK)
 - orderId : INT (FK, NULL) 
 - statusTypeId : INT (FK)
 - stepName : VARCHAR(100) 
-- executionTime : TIMESTAMP
-- observations : TEXT 
+- executionTime : DATETIME2
+- observations : VARBINARY(MAX) 
 
 
 ==============================================================
 |        					Transactions              	 	 |                                     
 ==============================================================
+## operations
+- operationId : INT IDENTITY(1,1) (PK)
+- operationName : VARCHAR(80)
+- operationDescription : VARCHAR(255)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy: integer (FK)
+
+## operationsTypes
+- operationTypeId : INT IDENTITY(1,1) (PK)
+- operationTypeName : VARCHAR(80)
+- operationTypeDescription : VARCHAR(255)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy: integer (FK)
+
+
 ## paymentsMethods
-- paymentMethodId : INT AUTO_INCREMENT (PK)
+- paymentMethodId : INT IDENTITY(1,1) (PK)
 - paymentMethodName : VARCHAR(50)
 - URL : VARCHAR(255)
+- config : VARBINARY(MAX)
+- enabled : BIT
+
+## paymentsMethodsPerCountry
+- paymentMethodCountryId : INT IDENTITY(1,1) (PK)
+- countryId : INT (FK) 
+- paymentMethodId : INT (FK)
+
 
 ## paymentsAttempts 
-
+- paymentAttemptId : INT IDENTITY(1,1) (PK)
+- paymentAttemptDate : DATETIME2
+- userId : INT (FK)
+- amount : DECIMAL (18, 6)
+- currencyId : INT (FK)
+- operationTypeId
 
 ## Transaction
 
-Payment method (Metodo, auditoria, url a la API, config.JSON, metodoDePagoPerCountry(opcional), Enabled, etc).
 > PaymentsAttemps(ID, dia, usuario, amount, currencyId, operationTypeId, referenceObjectId, sourceObjectId, result, requeste, response, transactionResponse(VARCHAR))
 > Transactions, este unicamente ingresa cuando es exito el paymentsAttemps, por lo que transaction es un hecho y este modelo es el de la clase.
