@@ -134,7 +134,8 @@ Esta investigación tiene cómo propósito entender bien los mecanismos necesari
 			* Ambos se quedan esperando para siempre
 			
 		3. Resolución del motor: SQL Server tiene un "Monitor de Deadlocks" que corre en el background. Al detectar un bucle, elige una transacción como víctima (normalmente la que ha consumido menos recursos) y la extermina a la fuerza (Rollback), permitiendo que la otra avance
-		
+
+------------------------------------------------------------------------------------------------------------------------------------------------------		
 		
 	TEMAS DE MODELADO DE DOMINIO Y LÓGICA DE NEGOCIO:
 	
@@ -182,6 +183,7 @@ Esta investigación tiene cómo propósito entender bien los mecanismos necesari
 	La teoría exige que cualquier orden de mutación sea condicional: Actualizar estados a uno nuevo SOLO SI el estado actual es igual al actual (un poco raro si)
 	
 	Luego, si una proposición está en estado Cerrada, el equipo de auditoría necesita saber la cronología exacta. El diseño auditable sugiere implementar un patrón "Append-Only" para el ciclo de vida, en lugar de hacer un simple UPDATE, cada cambio inserta un registro en una tabla de Historial de Estados que responde al quién, cuándo y por qué. 
+	
 	
 	2. Soft Deletes vs Tablas de Archivos:
 	
@@ -232,9 +234,270 @@ Esta investigación tiene cómo propósito entender bien los mecanismos necesari
 		3. En la parte de proposiciones y eventos, las tablas de archivo o las temporales aseguran que la tabla principal vuele, mitigando el problema del millón de registros generados por el seeding
 		
 		
+	3. Manejo Asíncrono de tareas y el Patrón Outbox
+	
+	Existe un dilema cuando necesitemos hacer un cambio local (guardar algo en la db) e invocar un servicio externo (mandar a analizar la proposición a la IA) en la misma operación de negocio. Ejemplo:
+	
+		1. El sistema inicia la transacción en la db
+		2. Guarda el registro "nueva proposición"
+		3. Hace una llamada HTTP al modelo de IA pidiendo la validación
+		4. La IA responde "Aprobado"
+		5. El sistema hace COMMIT de la transacción
 		
+		Esto sería catastrófico, ya que el caso 3 puede llegar a durar hasta segundos en completarse, por lo que la transacción mantendría las filas de la db bloquedas por ese tiempo y si miles de personas hacen la misma vara al mismo tiempo, generaría un deadlock masivo
+		Y si se decide hacer el COMMIT primero y luego llamar a la IA, si llega a ocurrir un error de red en media transacción, el registro queda en un limbo innacesible
 		
+	Por dicha los ingenieros actuales ya tienen una solución, el Patrón Outbox. Este asegura que la db transaccional solo se encargue de lo que se le da mejor, guardar datos en microsegundos usando garantías ACID
+	
+		Mecánica: En lugar de llamar a la IA directamente, la transacción local hace dos cosas a la vez:
 		
+			1. Inserta la entidad dominio (ej. la proposición en estado Pendiente_IA)
+			2. Inserta un "Mensaje" o "Evento" en una tabla especial llamada Outbox dentro de la misma db
+			
+		Como ambas ocurren a la vez, hay la garantía de Atomicidad: o se guarda la proposición junto con la intención de llamar a la IA, o no se guarda ninguna
 		
+	Una vez el evento esté en la tabla Outbox, la db termina su trabajo. Ahora, entra un proceso secundario independiente del usuario que hizo clics. Existen 2 formas para leer y procesar este proceso:
+	
+		1. Polling: Un script o hilo ejecuta un SELECT cada 5 segundos buscando registros no procesados en el Outbox. Toma los registros, llama a la IA y si la IA responde bien, borra el mensaje del Outbox o lo marca como procesador
 		
+		2. Log Tailing: En lugar de ejecutar consultas lentas, una herramienta externa lee directamente el archivo binario de transacciones del motor de la db a nivel disco, extrayendo los eventos del Outbox sin agregar sobrecarga de lectura al motor relacional
+
+	Todo muy bien con el Outbox, sin embargo, puede haber riesgo de duplicación, que pasa si el script lee el Outbox, llama a la IA y hace su trabajo, pero justo antes de que la IA responda y el script marque el proceso como completado, su cooldown se reinicia y vuelve a leer el Outbox? se duplica el proceso y resultado. Por lo que, los componentes externos deben estar diseñados para identificar que ya procesaron esa petición única y simplemente devolver el resultado anterior sin volver a ejecutar lo mismo
+	
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	TEMAS DE RENDIMIENTO Y PATRONES ESTRUCTURALES:
+	
+	1. CQRS y Segregación de Operaciones
 		
+	Según la teoría de CQRS, las lecturas y las escrituras tienen necesidades de rendimiento, escalabilidad y seguridad opuestas.
+		
+		1. Comportamiento de Escritura (Commands): Son validaciones, cálculos y bloqueos de la db. Su objetivo es garantizar la integridad ACID
+		
+		2. Comportamiento de Lectura (Queries): Son operaciones de consulta. Su objetivo es mostrar los datos de la manera más rápida posible
+		
+		Forzar a ambos procesos a usar las mismas estructuras crea un cuello de botella donde las consultas de lectura pesadas terminan bloqueando las transacciones de escritura críticas
+		
+	Un Command es una orden imperativa que cambia el estado del sistema. Un comando debe ejecutar una acción y no devolver datos (solo éxito, fallo o el ID generado). La teoría respalda que los comandos se deben ejecutar mediante SP:
+	
+		1. Reducción de latencia de red: Si se usa un ORM para escribir lógica compleja, el backend debe realizar múltiples viajes en la red. Si esta es lenta, la transacción tarda y bloquea la fila durante tiempo crítico. Un SP encapsula todo esto, viaja un solo comando al backend, la db procesa toda la lógica internamente a nivel de procesador y devuelve el resultado, minimizando el tiempo de bloqueo
+		
+		2. Seguridad por capas: Al usar SPs, puedes revocar todos los permisos de INSERT, UPDATE y DELETE directamente en las tablas. Los usuarios de la db solo tendrán permiso de EXECUTE sobre el SP. Esto impide que una inyección SQL o un error en el backend pueda vaciar una tabla o saltarse validaciones financieras
+		
+	Un Query es una solicitud sin efectos en el estado del sistema. Devuelve un modelo de datos de transferencia (DTO). Normalmente se usa un ORM para leer:
+	
+		1. Flexibilidad de Interfaz: Las interfaces de usuario cambian todo el rato, un día el frontend necesita algo, al día siguiente otra cosa. Un ORM permite que los devs de backend construyan SELECTS dinámicos y paginaciones rápidamente sin tener que pedirle a un administrador de la db que modifique y recompile un SP cada vez que cambia un pixel en la pantalla
+		
+		2. Hidratación de Objetos: El ORM sobresale en tomar filas y columnas planas de una db relacional y transformarlas en grafos de objetos orientados a objetos en la memoria del servidor, listos para ser serializados como JSON hacia el frontend
+		
+	El sistema CQRS no solo separa el código, sino que separa físicamente las db:
+	
+		1. Write DB: Una db super normalizada, optimizada para recibir miles de inserts por segundos
+		
+		2. Read DB: Una db desnormalizada, optimizada para tablas pre-calculadas donde la información ya está estructurada exactamente como la pide el frontend (sin necesidad de hacer JOINS)
+		
+	
+	2. Estrategias de Particionamiento: 
+		
+	En las dbs relacionales, una tabla se almacena físicamente en el disco dentro de estructuras llamadas páginas y extensiones. Cuando la tabla crece a millones de filas, operaciones como el mantenimiento de índices, escaneos, etc.. se vuelve sumamente lento. El particionamiento horizontal resuelve esto dividiendo físicamente los datos en múltiples fragmentos más pequeños basándose en una regla, pero manteniendo la idea de que es una sola gran tabla:
+	
+		1. Aplicación Transparente: Para el backend, sigue siendo un SELECT FROM xxxx. El ORM o el SP no saben que la tabla está partida en 50 pedazos. El motor de la db hace el enrutamiento mágico en el fondo
+		
+		2. La llave de partición: Es la columna que define a qué fragmento va cada fila. En sistemas transaccionales, casi siempre es una columna de fecha temporal o una llave de estado
+		
+	El verdadero poder del particionamiento durante la lectura se llama Pruning.
+	
+		Si se tiene una tabla con 10 años de datos, particionada por mes, se tendrán 120 particiones físicas. Si un usuario quiere ver datos de esta semana, el optimizador de consultas lee la clásula "WHERE Fecha >= hace 4 días" y se da cuenta de que los datos requeridos solo pueden existir en la partición actual. Por lo que, el motor de la db ignora las otras 119 particiones. Gracias a esto se reduce el costo del disco en más de un 99% sin cambiar una sola línea de código
+		
+	El particionamiento introduce el patrón de Ventana Deslizante para evitar usar DELETES:
+	
+		1. Se crea una nueva partición vacía al frente para recibir los datos de mañana
+		
+		2. Se desconecta la partición más vieja de la parte trasera usando una operación de metadatos (ALTER TABLE SWITCH)
+		
+		Esto funciona porque un SWITCH de partición no borra los datos fila por fila, simplemente desenlaza el puntero que une esa partición con la tabla principal. Por lo que se pueden eliminar millones de filas al instante
+		
+	Mientras el particionamiento divide la tabla entera, los índices filtrados aplican una teoría similar pero a los B-Trees que acelaran las búsquedas En vez de tomar en cuenta todos los registros (en nuestro caso las proposiciones activas y cerradas) el índice filtrado solo toma en cuenta las proposiciones que estén activas
+	
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	TEMAS DE SEGURIDAD AVANZADA
+	
+	1. Cifrado a nivel de celda y certificados maestros:
+	
+	Para entender este tema, primero hay que ver qué problemas no resuelve. En seguridad de db, existen 2 capas previas:
+	
+		1. Cifrado en tránsito (TLS): Protege los datos meintras viajan pro el cable de red entre la API y la db
+		
+		2. Cifrado en reposo (TDE): Cifra los archivos físicos .mdf y .ldf en el disco duro. Si alguien entre al centro de datos y roba físicamente el servidor, no podrá leer los datos
+		
+		Problema: Si un atacante logra obtener credenciales válidas y hace un SELECT FROM billeteras, ni TLS ni TDE lo detienen. El motor de la db descifra los datos automáticamente y se los entrega en texto plano.
+		
+		El cifrado a nivel de celda agrega una capa de Defensa en Profundidad. Los datos se almacenan cifrados lógicamente dentro de la tabla. Incluso si alguien tiene acceso total a la db y ejecuta un SELECT, solo verá una cadena binaria incomprensible a menos que posea la llave criptógrafica exacta para esa columna
+		
+	La criptografía a escala no funciona encriptando datos directamente con una contraseña, sino que exige un sistema de gestión de llaves jerárquico. Se diseña como una cadena de confianza donde cada eslabón protege al siguiente:
+	
+		1. Service Master Key (SMK): Es la raíz matemática de toda la instancia del servidor. Se genera automáticamente al instalar el motor y está atada al sistema operativo
+		
+		2. Database Master Key (DMK): Es la llave maestra específica de la db. Se cifra usando la SMK
+		
+		3. Master Certificate: Un certificado de seguridad que se ancla a la DMK
+		
+		4. Symmetric Key: La llave final que hace el trabajo pesado. Se cifra usando el certificado
+		
+		Se usa tanta vara por que las llaves se deben cambiar cada cierto tiempo y si tuvieramos solo 1 contraseña para cifrar 10millones de datos, al cambiarla tendríamos que descifrar y volver a cifrarlos. En cambio, si se quiere cambiar la seguridad, solo se cambia el certificado que protege la symmetric key y ya
+		
+	Normalmente se usa la criptografía simétrica y asimétrica en dbs porque resuelven cosas distintas:
+	
+		1. Asimétrica (El certificado): Usa un par de llaves, es muy segura pero usa muchos recursos, entonces cifrar cada celda con esto petaría el CPU
+		
+		2. Simétrica (La llave final): Usa una sola llave matemática para cifrar y descifrar. Es mucho más rápida
+		
+		Por lo que se usa la simétrica para cifrar todas las celdas de datos y la asimétrica para cifrar esa llave simétrica
+		
+	En una arquitectura segura, el DBA no es alguien que tiene acceso a todo:
+	
+		1. EL DBA debe poder hacer respaldos de la db, restaurarla, hacer índices y particiones, pero sobre la data cifrada
+		
+		2. Para que la data se vuelva legible, se requiere abrir el Master Certificate, algo que el DBA no debería saber cómo, ya que se realiza mediante un SP de acceso temporal el cual es inyectado en memoria por la aplicación web autorizada
+		
+	La criptografía moderna usa Entropía (randomness). Esto destruye por completo el ordenamiento de los datos. Por lo que resulta en escaneos de tablas ultra costosos en poder computacional. Hay que saber ponerle límites para no destrozar todo
+
+	2. Data Masking dinámicos
+	
+	Normalmente se confunden el enmascaramiento con el cifrado, pero son diferentes:
+	
+		1. Cifrado (seguridad): Altera físicamente los bits de la información en el disco duro o en la memoria. Cuesta ciclos de procesador para revertirlo
+		
+		2. Data Masking Dinámico (Privacidad): No altera absolutamente nada en el disco duro. Físicamente, el número de teléfono o el email de un cliente sigue guardado en texto plano perfecto en las páginas de la db. La magia ocurre en la capa de presentación, justo antes de enviar el paquete de red al cliente
+		
+		El motor relacional actua como un Proxy Interceptor. Cuando se ejecuta una instrucción SELECT, el motor compila los resultados y evalúa el contexto de seguridad de la sesión. Si el usuario que mandó el query no posee permisos de desenmascarar, el motor reemplaza los caracteres sensibles por caracteres como X o *
+		
+	El enmascaramiento establece distintos algoritmos dependiendo del tipo de dato, para no romper la experiencia del usuario: 
+	
+		1. Enmascaramiento total: Destruye completamente el valor. Un nombre se convierte en XXXX, un número 1500 se convierte en 0
+		
+		2. Enmascaramiento parcial: Preserva información útil para el contexto de soporte técnico. Muestra los primeros o últimos caracteres y oculta el centro 
+		
+		3. Enmascaramiento semántico: Reconoce la estructura del dato. Un correo se transforma manteniendo la primera letra y la sintaxis del dominio, lo que permite a un analista saber que es un correo válido sin revelar datos sensibles
+		
+		4. Enmascaramiento aleatorio: Exclusiva para campos numéricos. Sustituye el valor real por un valor aleatorio dentro de un rango definidos
+		
+	El data masking dinámico no es un mecanismo de seguridad hermético, porque sufre de vulnerabilidades de ataques de inferencia. Dado que el dato en el disco no está cifrado, el motor de la db sigue utilizando el valor real para resolver la lógica de las cláusulas "WHERE, JOIN, GROUP BY" y para el ordenamiento de los índices. Ejemplo: 
+	
+		Supongamos que el balance de puntos de un jugador está enmascarado y el usuario atacante solo ve un 0 en su pantalla. El atacante (con permisos básicos de SELECT) puede ejecutar ataques de fuerza bruta binaria:
+		
+		1. SELECT * FROM Jugadores WHERE Nombre = 'Elizabeth' AND BalancePuntos > 1000 (Devuelve $0$ filas).
+		
+		2. SELECT * FROM Jugadores WHERE Nombre = 'Elizabeth' AND BalancePuntos < 500 (Devuelve $1$ fila, aunque muestre un $0$ ofuscado).
+		
+		3. SELECT * FROM Jugadores WHERE Nombre = 'Elizabeth' AND BalancePuntos = 350 (Devuelve $1$ fila).
+		
+		Mediante este truco, el atacante ha logrado extraer el valor exacto sin haber tenido jamás el permiso para desenmascarar la columna. Por esta razón, se exige que el DDM se use solo para mitigar exposiciones accidentales en apps y herramientas de reportes, pero nunca como sustituto del control de acceso estricto o cifrado a nivel de celda para datos sensibles
+		
+	3. Row-Level Security (RLS) basado en predicados: 
+	
+	Normalmente, para aislar datos se delega la responsabilidad al dev de backend, mediante clásulas. El problema es que si a un programador se le olvida agregarlas correctamente en un nuevo endpoint de la API, ocurre una brecha de datos masiva. Para solucionar esto, el RLS traslada la responsabilidad del código de la app al nivel del kernel del motor de la db
+	
+	El RLS no funciona mediante permisos estáticos, sino aplicando una función de predicado matemática a cada fila. El motor de la db evalúa la función f(fila,contexto) ---> boolean
+	
+		1. Si la evaluación es verdadera, la fila se incluye en el flujo de resultados
+		
+		2. Si la evaluación es falsa, la fila se descarta a nivel de bajo nivel, antes de que el optimizador de consultas la envíe a la memoria
+		
+	Se deben de distinguir dos comportamientos de los predicados:
+	
+		1. Predicados de Filtro: Son silenciosos. Se aplican a las operaciones de lectura, actualizacion y borrado. Si un usuario intenta hacer un UPDATE masivo a todas las billeteras, el motor filtrará la instrucción para que solo afecte a su propia billetera
+		
+		2. Predicados de bloqueo: Son explícitos y ruidosos. Se aplican a los INSERTS. Previenen que un usuario cree un registro que luego no podrá ver. Si un usuario intenta insertar una predicción simulando que es otro usuario, el predicado detiene la transacción y lanza un error de SEGURIDAD
+		
+	Cómo sabe el motor de la db quién está ejecutando la consulta si todas las peticiones vienen del mismo Connection Pool del backend? En el RLS existen dos enfoques para inyectar el contexto de identidad: 
+	
+		1. Basado en el usuario de la db: Se utiliza la función USER_NAME(). Es útil si la app crea una conexión de db dedicada para cada jugador (ineficiente a gran escala)
+		
+		2. Basado en el Contexto de Sesión: Es el estándar para aplicaciones web. La app web se conecta usando un usuario genérico, pero inmediatamente ejecuta un SP temporal que inyecta un par clave-valor en la memoria de la sesión. El predicado de RLS leerá esta memoria volátil para aplicar el aislamiento matemático
+		
+	El mayor triunfo del RLS es su capacidad para mitigar ataques de inyección SQL
+	
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+	TEMAS DE AISLAMIENTO Y CONCURRENCIA 
+	
+	1. Isolation Levels: 
+	
+	Los niveles de aislamiento dictan las reglas de como el motor de la db maneja el tráfico de múltiples transacciones queriendo modificar una misma tabla a la vez. Los cuatro niveles estándar y los fenómenos que permiten y previenen son los siguientes:
+	
+		El fenómeno base: Dirty Reads y READ UNCOMMITED
+		
+			1. El nivel (READ UNCOMMITED): Es el nivel más relajado. Las consultas en este nivel no solicitan bloqueos compartidos al leer datos, además, ignoran los bloqueos exclusivos que otras transacciones hayan puesto
+			
+			2. El problema (Dirty Read): Ocurre cuando la transacción A modifica un dato, pero aún no hace COMMIT. La transacción B lee ese dato modificado. Si la transacción A decide hacer un ROLLBACK, la transacción B se queda operando con un dato fantasma que nunca existió en la db
+			
+			3. Uso real: Nunca se usa para finanzas. Se usa para reportes estadísticos masivos donde un margen de error mínimo es aceptable a cambio de no bloquear el sistema
+			
+		El fenómeno: Non-Repeatable Reads y READ COMMITED
+		
+			1. El nivel (READ COMMITED): Es el nivel por defecto en SQL Server. Garantiza que solo leerás datos que ya han sido confirmados. Si la transacción A está modificando una fila, la transacción B que intenta leerla se quedará esperando a que termine la años
+			
+			2. El problema (Lectura no repetible): Ocurre cuando una misma transacción lee la misma fila dos veces y obtiene datos distintos
+			
+		El fenómeno: Phantom Reads y REPEATABLE Read
+		
+			1. El nivel (REPEATABLE READ): Sube la seguridad. Soluciona el problema anterior manteniendo los bloqueos de lectura sobre las filas hasta que la transacción completa termina. Nadie puede modificar las filas que ya se leyó
+			
+			2. El problema (Lectura Fantasma): Este fenómeno no afecta a las filas existentes, sino a las filas nuevas:
+
+					Transacción A ejecuta: SELECT * FROM Predicciones WHERE ProposicionID = 10. Retorna 5 apuestas.
+
+					Transacción B inserta una nueva apuesta para la ProposicionID = 10 y hace COMMIT.
+
+					Transacción A vuelve a ejecutar la misma consulta exacta y, de la nada, aparece una sexta apuesta "fantasma".
+					
+		El aislamiento absoluto: SERIALIZABLE
+		
+			1. El nivel (SERIALIZABLE): El resultado de ejecutar transacciones concurrentes debe ser idéntico al resultado si se ejecutaran en serie
+			
+			2. El Mecanismo: Para prevenir los Phantom Reads, este nivel no solo bloquea las filas que lee, sino que usa Bloqueos de Rango de Claves. Si se está leyendo un registro, la db bloquea el índice para que nadie pueda insertar ningun registro nueva que coincida con esa condición hasta que se termine de leer
+			
+			3. El costo: Es la garantía absoluta ACID, pero es devastador para el RENDIMIENTO
+
+				
+		El aislamiento optimista: SNAPSHOT
+		
+			1. En lugar de bloquear filas y generar filas de espera masivas, utiliza un mecanismo llamado control de concurrencia multiversión
+			
+			2. Cuando la Transacción A inicia, se toma una foto a la db y se guarda en la db del sistema "tempdb". Si la transacción B modifica y compromete datos, la Transacción A sigue leyendo su versión SNAPSHOT
+			
+			3. No hay lecturas sucias, ni repetibles ni fantasmas y los lectores no bloquean a los escritores ni viceversa. Es una solución buena para evitar deadlocks al costo de consumir más disco y RAM del servidor
+			
+	2. Deadlock Graph y Trace Flags:
+	
+	Un motor como SQL Server tiene un hilo de procesamiento en segundo plano llamado Lock Monitor. Este hilo despierta periódicamente para recorrer en memoria el árbol de bloqueos activos. Cuando el monitor detecta un ciclo cerrado, sabe que las transacciones estarán en un estado de inanición eterna. El motor debe romper el ciclo eligiendo una víctima. La escoge de la siguiente manera:
+	
+		1. Prioridad: El motor revisa si alguna sesión tiene asignado un DEADLOCK_PRIORITY más bajo
+		
+		2. Costo de Reversión: Si todas tienen la misma prioridad, el motor calcula cuál transacción ha escrito menos bytes en el registro. Matar a esta transacción es más rápido y barato para el servidor
+
+		A la víctima se le inyecta un ERROR 1205, su transacción hace ROLLBACK forzoso y se liberan sus recursos
+
+	Normalmente cuando ocurre un Deadlock no se guarda un registro de qué causó el choque. Para forzar al motor a registrar la evidencia se utilizan Trace Flags. Son interruptores de diagnóstico a bajo nivel que alteran el comportamiento del motor
+
+		1. Trace Flag 1204: Devuelve un reporte en texto plano de los nodos involucrados en el Deadlock
+
+		2. Trace Flag 1222: Devuelve la información en formato XML estructurado, que describe los procesos y recursos
+		
+		Se activan globalmente mediante el comando DBCC TRACEON (1222, -1). Una vez encendido, cada vez que ocurra un deadlock, se activará como ya se explicó
+		
+	El deadlock Graph es la representación en formato XML del evento capturado. En SQL Server Management Studio, si se guarda el XML como .xdl, el programa lo renderiza gráficamente. Las tres secciones principales de este grafo son:
+
+		1. Process-List: Enumera las sesiones que chocaron. Aquí se verán qué SPs o instrucciones SQL estaban ejecutando cada hilo en el momento del choque
+
+		2. Resource-List: Enumera los objetos físicos que estaban en disputa. Se verán bloqueos de llave sobre índices específicos o bloqueos de página. Muestra quién era el "dueño" del recurso y quién estaba en espera
+		
+		3. Victim-List: Declara cuál de los procesos del Process-List fue sacrificado
+		
+	Aunque es bueno conocer de los Trace Flags, actualmente en modelos como SQL Server se usan los Extended Events (XEvents)
+	
+		1. Proporcionan un sistema de telemetría asíncrono y de bajo impacto
+		
+		2. El "System Health": SQL Server trae por defecto una sesión de eventos extendidos llamada system_health que corre en el fondo desde que se instala el servidor. Esta sesión captura automáticamente el XML del Deadlock Graph y lo guarda en un ring buffer  
