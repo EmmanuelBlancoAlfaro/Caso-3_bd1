@@ -51,3 +51,189 @@
 
 > [!IMPORTANT]
 > Guardar como trabajamos con los agentes para la defensa. 
+
+
+==============================================================
+|          				   Currency	                     	 | 
+==============================================================
+## Currencies
+- currencyId: serial auto-increment (PK)
+- currencySymbol: VARCHAR (5)
+- currencyName: VARCHAR (40)
+- isActive: BOOLEAN
+- postTime: TIMESTAMP
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+
+## ExchangeRates
+- exchangeRateId: serial auto-increment (PK)
+- currencyId1: integer (FK)
+- currencyId2: integer (FK)
+- exchangeRate: DECIMAL (18, 6)
+- postTime: TIMESTAMP
+- checkSum: BYTEA
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK) 
+
+## ExchangeHistories
+- exchangeHistoryId: serial auto-increment (PK)
+- startDateTime: TIMESTAMP
+- endDateTime: TIMESTAMP
+- currencyId1: integer (FK)
+- currencyId2: integer (FK)
+- exchangeRate: DECIMAL (18, 6)
+- postTime: TIMESTAMP
+- checkSum: BYTEA
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+- exchangeRateId: integer (FK)
+
+==============================================================
+|          				   Addresses	                     |
+==============================================================
+
+## Countries
+- countryId: serial auto-increment (PK)
+- isoCode: UNIQUE VARCHAR (3) 
+- countryName: VARCHAR (50)
+- isActive: BOOLEAN
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+
+## States
+- stateId: serial auto-increment (PK)
+- countryId: integer (FK)
+- stateName: VARCHAR (40)
+- isActive: BOOLEAN
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+
+## Cities
+- cityId: serial auto-increment (PK)
+- stateId: integer (FK)
+- cityName: VARCHAR (50)
+- isActive: BOOLEAN
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+
+## Addresses
+- addressId: serial auto-increment (PK)
+- cityId: integer (FK)
+- address: VARCHAR (100)
+- zipCode: VARCHAR (20)
+- position: GEOGRAPHY
+- isActive: BOOLEAN
+- createdAt: TIMESTAMP
+- updatedAt: TIMESTAMP
+- updatedBy: integer (FK)
+
+
+==============================================================
+|          				        users 	                     |
+==============================================================
+## FUNCION: Aqui nada mas son los usuarios del sistema, no hay mucha explicacion es bastante obvio todo
+
+## users
+- userId : INT AUTO_INCREMENT (PK)			 	
+- name : VARCHAR(50)					
+- lastName : VARCHAR(50)				
+- email : VARCHAR(100)		
+- password : VARBINARY			
+- phone : INT 							
+- creadetAt : TIMESTAMP					
+- enabled : BOOLEAN						
+
+## usersAddresses
+- userAddressId : INT AUTO_INCREMENT (PK)
+- userId : INT (FK)					
+- addressID : INT (FK)					
+- enabled : BOOLEAN						
+- checksum : VARBINARY					
+
+## permision
+- permisionId : INT AUTO_INCREMENT (PK)
+- description : VARCHAR (200)
+- 
+
+
+
+==============================================================
+|        					logs              	 	         |                                     
+==============================================================
+## sessions
+- sessionId : INT AUTO_INCREMENT (PK)
+- userId : INT(FK)
+- sessionToken : VARCHAR(100)
+- creadetAt : TIMESTAMP
+
+## eventsTypes
+- eventTypeId : INT AUTO_INCREMENT (PK)
+- name : VARCHAR(50)
+- description : VARCHAR(150)
+
+## dataObjects
+- dataObjectId : INT AUTO_INCREMENT(PK)
+- name : VARCHAR(50)
+- description : VARCHAR(100)
+
+## severities
+- severityId : INT AUTO_INCREMENT (PK)
+- name : VARCHAR(50)
+- description : VARCHAR(100)
+
+## usersLogs
+- logId : INT AUTO_INCREMENT(PK)
+- eventType : INT(FK)
+- dataObjectId : INT(FK)
+- websiteId : INT(FK)
+- sessionId : INT(FK)
+- description : VARCHAR(255)
+- creadetAt : TIMESTAMP
+- metadata : JSON 			
+
+## systemErrorsLogs
+- errorId : INT AUTO_INCREMENT (PK)
+- severityId : INT (FK)
+- processUuid : VARCHAR(100)
+- processName : VARCHAR(100)
+- stepName : VARCHAR(100)
+- inputData : JSON
+- errorMesage : TEXT
+- creadetAt : DATE 
+
+## statusTransactionType
+- statusTypeId : INT AUTO_INCREMENT (PK)
+- statusName : VARCHAR(50) 
+- statusDescription : VARCHAR(150)
+
+## spTransactionState
+- stateId : INT AUTO_INCREMENT (PK)
+- orderId : INT (FK, NULL) 
+- statusTypeId : INT (FK)
+- stepName : VARCHAR(100) 
+- executionTime : TIMESTAMP
+- observations : TEXT 
+
+
+==============================================================
+|        					Transactions              	 	 |                                     
+==============================================================
+## paymentsMethods
+- paymentMethodId : INT AUTO_INCREMENT (PK)
+- paymentMethodName : VARCHAR(50)
+- URL : VARCHAR(255)
+
+## paymentsAttempts 
+
+
+## Transaction
+
+Payment method (Metodo, auditoria, url a la API, config.JSON, metodoDePagoPerCountry(opcional), Enabled, etc).
+> PaymentsAttemps(ID, dia, usuario, amount, currencyId, operationTypeId, referenceObjectId, sourceObjectId, result, requeste, response, transactionResponse(VARCHAR))
+> Transactions, este unicamente ingresa cuando es exito el paymentsAttemps, por lo que transaction es un hecho y este modelo es el de la clase.
