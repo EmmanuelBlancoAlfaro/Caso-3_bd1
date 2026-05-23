@@ -64,32 +64,32 @@
 - postTime: DATETIME2
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 ## ExchangeRates
 - exchangeRateId: INT IDENTITY(1,1) (PK)
-- currencyId1: integer (FK)
-- currencyId2: integer (FK)
+- currencyId1: INT (FK)
+- currencyId2: INT (FK)
 - exchangeRate: DECIMAL (18, 6)
 - postTime: DATETIME2
 - checkSum: VARBINARY(MAX)
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK) 
+- updatedBy: INT (FK) 
 
 ## ExchangeHistories
 - exchangeHistoryId: INT IDENTITY(1,1) (PK)
 - startDateTime: DATETIME2
 - endDateTime: DATETIME2
-- currencyId1: integer (FK)
-- currencyId2: integer (FK)
+- currencyId1: INT (FK)
+- currencyId2: INT (FK)
 - exchangeRate: DECIMAL (18, 6)
 - postTime: DATETIME2
 - checkSum: VARBINARY(MAX)
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
-- exchangeRateId: integer (FK)
+- updatedBy: INT (FK)
+- exchangeRateId: INT (FK)
 
 ==============================================================
 |          				   Addresses	                     |
@@ -102,36 +102,36 @@
 - isActive: BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 ## States
 - stateId: INT IDENTITY(1,1) (PK)
-- countryId: integer (FK)
+- countryId: INT (FK)
 - stateName: VARCHAR (40)
 - isActive: BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 ## Cities
 - cityId: INT IDENTITY(1,1) (PK)
-- stateId: integer (FK)
+- stateId: INT (FK)
 - cityName: VARCHAR (50)
 - isActive: BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 ## Addresses
 - addressId: INT IDENTITY(1,1) (PK)
-- cityId: integer (FK)
+- cityId: INT (FK)
 - address: VARCHAR (100)
 - zipCode: VARCHAR (20)
 - position: GEOGRAPHY
 - isActive: BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 
 ==============================================================
@@ -182,6 +182,10 @@
 - name : VARCHAR(50)
 - description : VARCHAR(100)
 
+## referenceObject
+- referenceObjectId
+
+
 ## severities
 - severityId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
@@ -191,7 +195,6 @@
 - logId : INT IDENTITY(1,1) (PK)
 - eventType : INT(FK)
 - dataObjectId : INT(FK)
-- websiteId : INT(FK)
 - sessionId : INT(FK)
 - description : VARCHAR(255)
 - creadetAt : DATETIME2
@@ -207,38 +210,24 @@
 - errorMesage : VARBINARY(MAX)
 - creadetAt : DATE 
 
-## statusTransactionType
-- statusTypeId : INT IDENTITY(1,1) (PK)
-- statusName : VARCHAR(50) 
-- statusDescription : VARCHAR(150)
-
-## spTransactionState
-- stateId : INT IDENTITY(1,1) (PK)
-- orderId : INT (FK, NULL) 
-- statusTypeId : INT (FK)
-- stepName : VARCHAR(100) 
-- executionTime : DATETIME2
-- observations : VARBINARY(MAX) 
-
-
 ==============================================================
 |        					Transactions              	 	 |                                     
 ==============================================================
-## operations
-- operationId : INT IDENTITY(1,1) (PK)
-- operationName : VARCHAR(80)
-- operationDescription : VARCHAR(255)
+## movements
+- movementId : INT IDENTITY(1,1) (PK)
+- movementName : VARCHAR(80)
+- movementDescription : VARCHAR(255)
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
-## operationsTypes
-- operationTypeId : INT IDENTITY(1,1) (PK)
-- operationTypeName : VARCHAR(80)
-- operationTypeDescription : VARCHAR(255)
+## movementsTypes
+- movementTypeId : INT IDENTITY(1,1) (PK)
+- movementTypeName : VARCHAR(80)
+- movementTypeDescription : VARCHAR(255)
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
-- updatedBy: integer (FK)
+- updatedBy: INT (FK)
 
 
 ## paymentsMethods
@@ -260,9 +249,33 @@
 - userId : INT (FK)
 - amount : DECIMAL (18, 6)
 - currencyId : INT (FK)
-- operationTypeId
+- movementTypeId : INT (FK)
+- result : VARCHAR(255)
+- request : VARCHAR(255)
+- transactionResponse : VARCHAR(MAX) 
+
+> [!NOTE]
+> TOCA AGREGAR LAS TABLAS DE ESTOS DOS
+>- referenceObjectId : INT (FK)
+>- sourceObjectId : INT (FK)
 
 ## Transaction
+- transactionID : INT IDENTITY(1,1) (PK)
+- transactionNumber : INT
+- 
 
-> PaymentsAttemps(ID, dia, usuario, amount, currencyId, operationTypeId, referenceObjectId, sourceObjectId, result, requeste, response, transactionResponse(VARCHAR))
+## statusTransactionType
+- statusTypeId : INT IDENTITY(1,1) (PK)
+- statusName : VARCHAR(50) 
+- statusDescription : VARCHAR(150)
+
+## transactionState
+- stateId : INT IDENTITY(1,1) (PK)
+- orderId : INT (FK, NULL) 
+- statusTypeId : INT (FK)
+- stepName : VARCHAR(100) 
+- executionTime : DATETIME2
+- observations : VARBINARY(MAX) 
+
+> PaymentsAttemps(ID, dia, usuario, amount, currencyId, operationTypeId, referenceObjectId, sourceObjectId, result, request, response, transactionResponse(VARCHAR))
 > Transactions, este unicamente ingresa cuando es exito el paymentsAttemps, por lo que transaction es un hecho y este modelo es el de la clase.
