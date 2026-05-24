@@ -371,7 +371,7 @@ Este documento detalla los 8 patrones de diseño estructurales que fundamentan e
 		│ PK cuentaid                │                   │ PK movid                   │
 		│    titular                 │                   │ FK cuentaid                │
 		│    estado                  │                   │    fecha                   │
-		└────────────────────────────┘                   │    tipo (CRED/DEB/AJ)     │
+		└────────────────────────────┘                   │    tipo (CRED/DEB/AJ)      │
 														 │    monto                   │
 														 │    referencia              │
 														 └────────────────────────────┘

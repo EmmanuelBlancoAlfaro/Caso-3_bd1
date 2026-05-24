@@ -18,7 +18,7 @@
 
 > [!TIP]
 > ## Reglas de puntos
-> - Es bueno tener una tabla de configuraciones para que los puntos y tristibucion no quede hardcodeado
+> - Es bueno tener una tabla de configuraciones para que los puntos y Distibucion no quede hardcodeado
 
 > [!TIP]
 > Todo lo relacionado con dinero se trae de etheria, metodos (paypal), pagos(intentos).
@@ -51,6 +51,34 @@
 
 > [!IMPORTANT]
 > Guardar como trabajamos con los agentes para la defensa. 
+
+
+
+==============================================================
+|          				   Gathel	                        | 
+==============================================================
+## events
+- eventId : INT IDENTITY(1,1) (PK)
+- createdBy : INT (FK)
+- validFrom : DATETIME2
+- validUntil : DATETIME2
+
+## propositionsState
+- propositionStateId : INT IDENTITY(1,1) (PK)
+- propositionStateName : VARCHAR(50)
+
+## propositions
+- propositionsId : INT IDENTITY(1,1) (PK)
+- propositionTopic : VARCHAR(100)
+- createdBy : INT (FK)
+- propositionFor : INT (FK)
+- votes : INT
+- createdAt : DATETIME2
+- validFrom : DATETIME2
+- validUntil : DATETIME2
+- propositionStateId : INT (FK)
+
+
 
 
 ==============================================================
@@ -137,7 +165,31 @@
 ==============================================================
 |          				        users 	                     |
 ==============================================================
-## FUNCION: Aqui nada mas son los usuarios del sistema, no hay mucha explicacion es bastante obvio todo
+## permission
+- permissionId : INT IDENTITY(1,1) (PK)
+- description : VARCHAR (200)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+
+## rol
+- rolId : INT IDENTITY(1,1) (PK)
+- rolName : VARCHAR (50)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+
+## permissionsPerRol
+- permissionPerRolId : INT IDENTITY(1,1) (PK)
+- rolId : INT(FK)
+- permissionId : INT(FK)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+
+## usersPerRol
+- userPerRolId : INT IDENTITY(1,1) (PK)
+- userId : INT(FK)
+- rolId : INT(FK)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 
 ## users
 - userId : INT IDENTITY(1,1) (PK)			 	
@@ -148,6 +200,15 @@
 - phone : INT 							
 - creadetAt : DATETIME2					
 - enabled : BIT						
+- rolId : INT (FK)
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+
+## pointsPerUser
+- pointsperUserId : INT IDENTITY(1,1) (PK)	
+- userId : INT (FK)
+- points : INT
+
 
 ## usersAddresses
 - userAddressId : INT IDENTITY(1,1) (PK)
@@ -155,13 +216,24 @@
 - addressID : INT (FK)					
 - enabled : BIT						
 - checksum : VARBINARY(MAX)					
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
 
-## permision
-- permisionId : INT AUTO_INCREMENT (PK)
-- description : VARCHAR (200)
-- 
+## walletStates
+- walletStateId : INT IDENTITY(1,1) (PK)
+- walletStateName : VARCHAR(50)
+- walletStateDescription : VARCHAR(255)
 
 
+## wallets
+- walletId : INT IDENTITY(1,1) (PK)
+- userId : INT (FK)	
+- balanceId : INT (FK)
+- stateId : INT (FK)
+- currencyId : INT (FK)
+- Balance : DECIMAL(18, 4)
+- CreadetAt : DATETIME2
+- UpdatedAt : DATETIME2
 
 ==============================================================
 |        					logs              	 	         |                                     
@@ -182,8 +254,13 @@
 - name : VARCHAR(50)
 - description : VARCHAR(100)
 
-## referenceObject
-- referenceObjectId
+> [!NOTE]
+> TOCA AGREGAR LAS COLUMNAS DE ESTAS DOS TABLAS
+> ## referenceObject
+> - referenceObjectId : INT IDENTITY(1,1) (PK)
+>
+> ## sourceObject
+>- sourceObjectId : INT IDENTITY(1,1) (PK)
 
 
 ## severities
@@ -236,6 +313,9 @@
 - URL : VARCHAR(255)
 - config : VARBINARY(MAX)
 - enabled : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy: INT (FK)
 
 ## paymentsMethodsPerCountry
 - paymentMethodCountryId : INT IDENTITY(1,1) (PK)
@@ -246,23 +326,15 @@
 ## paymentsAttempts 
 - paymentAttemptId : INT IDENTITY(1,1) (PK)
 - paymentAttemptDate : DATETIME2
-- userId : INT (FK)
+- walletId : INT (FK)
 - amount : DECIMAL (18, 6)
 - currencyId : INT (FK)
 - movementTypeId : INT (FK)
 - result : VARCHAR(255)
 - request : VARCHAR(255)
 - transactionResponse : VARCHAR(MAX) 
-
-> [!NOTE]
-> TOCA AGREGAR LAS TABLAS DE ESTOS DOS
->- referenceObjectId : INT (FK)
->- sourceObjectId : INT (FK)
-
-## Transaction
-- transactionID : INT IDENTITY(1,1) (PK)
-- transactionNumber : INT
-- 
+- referenceObjectId : INT (FK)
+- sourceObjectId : INT (FK)
 
 ## statusTransactionType
 - statusTypeId : INT IDENTITY(1,1) (PK)
@@ -277,5 +349,14 @@
 - executionTime : DATETIME2
 - observations : VARBINARY(MAX) 
 
-> PaymentsAttemps(ID, dia, usuario, amount, currencyId, operationTypeId, referenceObjectId, sourceObjectId, result, request, response, transactionResponse(VARCHAR))
-> Transactions, este unicamente ingresa cuando es exito el paymentsAttemps, por lo que transaction es un hecho y este modelo es el de la clase.
+## Transaction
+- transactionID : INT IDENTITY(1,1) (PK)
+- transactionNumber : INT
+- transactionDate : DATETIME2
+- walletId : INT (FK)
+- amount : DECIMAL (18, 6)
+- currencyId : INT (FK)
+- movementTypeId : INT (FK)
+- stateId : INT (FK)
+
+
