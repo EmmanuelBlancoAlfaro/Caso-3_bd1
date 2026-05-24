@@ -55,6 +55,14 @@
 
 
 ==============================================================
+|          				   Balance	                        | 
+==============================================================
+> [!NOTE]
+> FALTA METER EL BALANCE PATTERN
+
+
+
+==============================================================
 |          				   Gathel	                        | 
 ==============================================================
 ## events
@@ -65,7 +73,7 @@
 
 ## propositionsState
 - propositionStateId : INT IDENTITY(1,1) (PK)
-- propositionStateName : VARCHAR(50)
+- propositionStateName : VARCHAR(32)
 
 ## propositions
 - propositionsId : INT IDENTITY(1,1) (PK)
@@ -77,8 +85,20 @@
 - validFrom : DATETIME2
 - validUntil : DATETIME2
 - propositionStateId : INT (FK)
+- evidence : VARCHAR(MAX) 
+- result : VARCHAR(255)
 
+## predictionState
+- predictionStateId : INT IDENTITY(1,1) (PK)
+- predictionStateName : VARCHAR(32)
 
+> [!NOTE]
+> FALTA PONER SI SE HIZO LA PREDICCION POR PUNTOS O DINERO REAL Y UNA MANERA PARA DEVOLVERLO
+## prediction
+- predictionId : INT IDENTITY(1,1) (PK)
+- userId : INT(FK)
+- predictionStateId : INT(FK)
+  
 
 
 ==============================================================
@@ -224,7 +244,8 @@
 - walletStateName : VARCHAR(50)
 - walletStateDescription : VARCHAR(255)
 
-
+> [!NOTE]
+> FALTA PONER DE ALGUNA MANERA LOS PUNTOS POR USUARIO APARTE DE EL DINERO REAL
 ## wallets
 - walletId : INT IDENTITY(1,1) (PK)
 - userId : INT (FK)	
