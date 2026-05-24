@@ -53,15 +53,6 @@
 > Guardar como trabajamos con los agentes para la defensa. 
 
 
-
-==============================================================
-|          				   Balance	                        | 
-==============================================================
-> [!NOTE]
-> FALTA METER EL BALANCE PATTERN
-
-
-
 ==============================================================
 |          				   Gathel	                        | 
 ==============================================================
@@ -74,6 +65,16 @@
 ## propositionsState
 - propositionStateId : INT IDENTITY(1,1) (PK)
 - propositionStateName : VARCHAR(32)
+- isActive : BIT
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
+
+## PropositionRates
+- propositionRateId: INT IDENTITY(1,1) (PK)
+- propositionId: INT (FK)
+- percentageInFavorOf: DECIMAL (6, 3)
+- percentageAgainst : DECIMAL (6, 3)
 
 ## propositions
 - propositionsId : INT IDENTITY(1,1) (PK)
@@ -81,6 +82,8 @@
 - createdBy : INT (FK)
 - propositionFor : INT (FK)
 - votes : INT
+- totalAmountOfPoints: INT
+- totaAmountOfMoney: DECIMAL (18, 6)
 - createdAt : DATETIME2
 - validFrom : DATETIME2
 - validUntil : DATETIME2
@@ -91,15 +94,22 @@
 ## predictionState
 - predictionStateId : INT IDENTITY(1,1) (PK)
 - predictionStateName : VARCHAR(32)
+- isActive : BIT
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
-> [!NOTE]
-> FALTA PONER SI SE HIZO LA PREDICCION POR PUNTOS O DINERO REAL Y UNA MANERA PARA DEVOLVERLO
 ## prediction
 - predictionId : INT IDENTITY(1,1) (PK)
 - userId : INT(FK)
 - predictionStateId : INT(FK)
 - propositionsId : INT(FK)
-
+- description : VARCHAR (50)
+- result : VARCHAR (25)
+- amountOfPoints: INT
+- amountOfMoney: DECIMAL (18, 6)
+- validFrom : DATETIME2
+- validUntil : DATETIME2
 
 
 ==============================================================
@@ -189,28 +199,36 @@
 ## permission
 - permissionId : INT IDENTITY(1,1) (PK)
 - description : VARCHAR (200)
+- isActive : BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## rol
 - rolId : INT IDENTITY(1,1) (PK)
 - rolName : VARCHAR (50)
+- isActive : BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## permissionsPerRol
 - permissionPerRolId : INT IDENTITY(1,1) (PK)
 - rolId : INT(FK)
 - permissionId : INT(FK)
+- isActive : BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## usersPerRol
 - userPerRolId : INT IDENTITY(1,1) (PK)
 - userId : INT(FK)
 - rolId : INT(FK)
+- isActive : BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## users
 - userId : INT IDENTITY(1,1) (PK)			 	
@@ -220,25 +238,31 @@
 - password : VARBINARY(MAX)		
 - phone : INT 							
 - creadetAt : DATETIME2					
-- enabled : BIT						
+- isActive : BIT						
 - rolId : INT (FK)
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## usersAddresses
 - userAddressId : INT IDENTITY(1,1) (PK)
 - userId : INT (FK)					
 - addressID : INT (FK)					
-- enabled : BIT						
+- isActive : BIT						
 - checksum : VARBINARY(MAX)					
+- isActive : BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## walletStates
 - walletStateId : INT IDENTITY(1,1) (PK)
 - walletStateName : VARCHAR(50)
 - walletStateDescription : VARCHAR(255)
-
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- createdBy : INT (FK)
 
 ## wallets
 - walletId : INT IDENTITY(1,1) (PK)
@@ -246,9 +270,25 @@
 - balanceId : INT (FK)
 - stateId : INT (FK)
 - currencyId : INT (FK)
-- Balance : DECIMAL(18, 4)
-- CreadetAt : DATETIME2
-- UpdatedAt : DATETIME2
+- pin : INT 
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
+
+==============================================================
+|        					social network                   |                                     
+==============================================================
+
+## Social Networks
+
+- socialNetworkId: INT IDENTITY (1,1) (PK)
+- socialNetworkName: VARCHAR (40)
+- socialURL : VARCHAR (255)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK) 
 
 ==============================================================
 |        					logs              	 	         |                                     
@@ -263,11 +303,19 @@
 - eventTypeId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(150)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## dataObjects
 - dataObjectId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 > [!NOTE]
 > TOCA AGREGAR LAS COLUMNAS DE ESTAS DOS TABLAS
@@ -282,6 +330,10 @@
 - severityId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## usersLogs
 - logId : INT IDENTITY(1,1) (PK)
@@ -336,6 +388,10 @@
 - paymentMethodCountryId : INT IDENTITY(1,1) (PK)
 - countryId : INT (FK) 
 - paymentMethodId : INT (FK)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 
 ## paymentsAttempts 
@@ -348,13 +404,17 @@
 - result : VARCHAR(255)
 - request : VARCHAR(255)
 - transactionResponse : VARCHAR(MAX) 
-- referenceObjectId : INT (FK)
-- sourceObjectId : INT (FK)
+- referenceObjectId : VARCHAR (50)
+- sourceObjectId : VARCHAR (50)
 
 ## statusTransactionType
 - statusTypeId : INT IDENTITY(1,1) (PK)
 - statusName : VARCHAR(50) 
 - statusDescription : VARCHAR(150)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## transactionState
 - stateId : INT IDENTITY(1,1) (PK)
@@ -362,16 +422,26 @@
 - statusTypeId : INT (FK)
 - stepName : VARCHAR(100) 
 - executionTime : DATETIME2
-- observations : VARBINARY(MAX) 
+- observations : VARBINARY(MAX)
+- isActive : BIT
+- createdAt: DATETIME2
+- updatedAt: DATETIME2
+- updatedBy : INT (FK)
 
 ## Transaction
 - transactionID : INT IDENTITY(1,1) (PK)
 - transactionNumber : INT
 - transactionDate : DATETIME2
+- paymentMethodCountryId : INT (FK)
 - walletId : INT (FK)
 - amount : DECIMAL (18, 6)
 - currencyId : INT (FK)
 - movementTypeId : INT (FK)
 - stateId : INT (FK)
+- createdAT : DATETIME2
 
-
+## Balance
+- walletId : INT IDENTITY(1,1) (PK y FK)
+- currentPointsBalance : INT
+- currentMoneyBalance : DECIMAL (18, 6)
+- updatedAt: DATETIME2
