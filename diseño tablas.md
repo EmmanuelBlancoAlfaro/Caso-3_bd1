@@ -8,13 +8,13 @@
 >
 
 > [!TIP]
-> Solo una tabla de bitacora para analizar procesos es suficiente con: el procesoId, procesTpe, tipoDeContenido, URL al content, tipo de URL, source type tambien puede ser, un response , un request y un result(aprobado, negado, irreconocible, etc). Para tener el tracking de lo que sucede. Entonces suponer que solo obtenemos los resultados de lo que sucede
+> Solo una tabla de bitacora para analizar procesos es suficiente con: el procesoId, procesTYpe, tipoDeContenido, URL al content, tipo de URL, source type tambien puede ser, un response , un request y un result(aprobado, negado, irreconocible, etc). Para tener el tracking de lo que sucede. Entonces suponer que solo obtenemos los resultados de lo que sucede
 
 > [!TIP]
 > User, permisos, logins, logs, currency, transaction, balance. Los usamos de etheria o de Dynamic, copiar y pegar, unicamente un rename y modificar el contexto
 
 > [!TIP]
-> No tener tablas para insta, tiktok, etc, Son tablas de social network, con resouerce, resource types y se logea esos resources, entonces se logea el content el URL y esto se va registrando para que sea algo generico.
+> No tener tablas para insta, tiktok, etc, Son tablas de social network, con resouerce, resource types y se logea esos resources, entonces se logea el content, el URL y esto se va registrando para que sea algo generico.
 
 > [!TIP]
 > ## Reglas de puntos
@@ -98,7 +98,8 @@
 - predictionId : INT IDENTITY(1,1) (PK)
 - userId : INT(FK)
 - predictionStateId : INT(FK)
-  
+- propositionsId : INT(FK)
+
 
 
 ==============================================================
@@ -224,12 +225,6 @@
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
 
-## pointsPerUser
-- pointsperUserId : INT IDENTITY(1,1) (PK)	
-- userId : INT (FK)
-- points : INT
-
-
 ## usersAddresses
 - userAddressId : INT IDENTITY(1,1) (PK)
 - userId : INT (FK)					
@@ -244,8 +239,7 @@
 - walletStateName : VARCHAR(50)
 - walletStateDescription : VARCHAR(255)
 
-> [!NOTE]
-> FALTA PONER DE ALGUNA MANERA LOS PUNTOS POR USUARIO APARTE DE EL DINERO REAL
+
 ## wallets
 - walletId : INT IDENTITY(1,1) (PK)
 - userId : INT (FK)	
