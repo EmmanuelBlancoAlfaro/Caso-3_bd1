@@ -135,9 +135,7 @@
 - userId : INT IDENTITY(1,1) (PK)			 	
 - name : VARCHAR(50)					
 - lastName : VARCHAR(50)
-- email : VARCHAR(100)		
-- passwordHash: VARCHAR (255)
-- phone : VARCHAR(20)							
+- passwordHash: VARCHAR (255)							
 - isActive : BIT						
 - createdAt : DATETIME2
 - updatedAt : DATETIME2
@@ -193,37 +191,51 @@
 - sessionId : INT IDENTITY(1,1) (PK)
 - userId : INT(FK)
 - sessionToken : VARCHAR(100)
+- isActive : BIT	
 - createdAt : DATETIME2
 
 ## EventTypes
 - eventTypeId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(150)
-- isActive : BIT
-- createdAt: DATETIME2
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## DataObjects
 - dataObjectId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
-- isActive : BIT
-- createdAt: DATETIME2
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
-## ReferenceObjects
-- referenceObjectId : INT IDENTITY(1,1) (PK)
-- objectName : VARCHAR(100) 
-- isActive : BIT
+## ReferenceObjectsTypes
+- referenceObjectTypeId : INT IDENTITY(1,1) (PK)
+- objectTypeName : VARCHAR(100) 
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
-## SourceObjects
-- sourceObjectId : INT IDENTITY(1,1) (PK)
-- objectName : VARCHAR(100) 
-- isActive : BIT
+## SourceObjectsTypes
+- sourceObjectTypeId : INT IDENTITY(1,1) (PK)
+- objectTypeName : VARCHAR(100) 
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## Severities
 - severityId : INT IDENTITY(1,1) (PK)
 - name : VARCHAR(50)
 - description : VARCHAR(100)
-- isActive : BIT
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## UsersLogs
 - logId : INT IDENTITY(1,1) (PK)
@@ -247,14 +259,18 @@
 ## AIProcessTypes
 - processTypeId : INT IDENTITY(1,1) (PK)
 - processTypeName : VARCHAR(50)
-- isActive : BIT
+- isActive : BIT						
 - createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## AIContentTypes
 - contentTypeId : INT IDENTITY(1,1) (PK)
 - contentTypeName : VARCHAR(50)
-- isActive : BIT
+- isActive : BIT						
 - createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## SourceTypes
 - sourceTypeId : INT IDENTITY(1,1) (PK)
@@ -272,17 +288,24 @@
 - updatedAt : DATETIME2
 - updatedBy : INT (FK)
 
+# URLTypes
+- urlTypeId : INT IDENTITY(1,1) (PK)
+- urlTypeName : VARCHAR (50)
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK) 
 
-## AIBitacoraProcesos
+## AIProcessesLogs
 - processLogId : BIGINT IDENTITY(1,1) (PK)
 - processTypeId : INT (FK)
 - contentTypeId : INT (FK)
-- contentUrl : VARCHAR(255)
-- urlType : VARCHAR(50)
+- urlTypeId : INT (FK)
+- resultTypeId : INT (FK)
 - sourceTypeId : INT (FK)
+- contentUrl : VARCHAR(255)
 - requestJson : NVARCHAR(MAX)
 - responseJson : NVARCHAR(MAX)
-- resultTypeId : INT (FK)
 - createdAt : DATETIME2
 
 ==============================================================
@@ -309,6 +332,14 @@
 - updatedAt : DATETIME2
 - updatedBy : INT (FK)
 
+## PropositionsResultsTypes
+- resultTypeId : INT IDENTITY(1,1) (PK)
+- resultTypeName : VARCHAR (40)
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
+
 ## Propositions
 - propositionId : BIGINT IDENTITY (1,1) (PK)
 - eventId : INT (FK) 
@@ -317,9 +348,8 @@
 - targetUserId : INT (FK)
 - propositionStateId : INT (FK)
 - description : VARCHAR (255)
-- votes : INT
 - evidenceUrl : VARCHAR(MAX) 
-- result : VARCHAR(255)
+- resultTypeId : INT (FK)
 - validFrom : DATETIME2
 - validUntil : DATETIME2
 - isActive : BIT						
@@ -332,6 +362,10 @@
 - propositionId: BIGINT (FK)
 - percentageInFavorOf: DECIMAL (6, 3)
 - percentageAgainst : DECIMAL (6, 3)
+- isActive : BIT						
+- createdAt : DATETIME2
+- updatedAt : DATETIME2
+- updatedBy : INT (FK)
 
 ## PropositionStateHistories
 - historyId : BIGINT IDENTITY (1,1) (PK)
@@ -389,7 +423,7 @@
 - platformId : INT (FK)
 - resourceTypeId : INT (FK)
 - url : VARCHAR (255)
-- metadataJson : VARCHAR (MAX)
+- metadataJson : NVARCHAR (MAX)
 - isActive : BIT						
 - createdAt : DATETIME2
 - updatedAt : DATETIME2
@@ -403,6 +437,7 @@
 - currencyId: INT IDENTITY(1,1) (PK)
 - currencySymbol: VARCHAR (5)
 - currencyName: VARCHAR (40)
+- isVirtual : BIT
 - isActive: BIT
 - createdAt: DATETIME2
 - updatedAt: DATETIME2
@@ -486,8 +521,10 @@
 - currencyId : INT (FK)
 - movementTypeId : INT (FK)
 - resultTypeId : INT (FK)
-- referenceObjectId : INT (FK)
-- sourceObjectId : INT (FK)
+- referenceObjectTypeId : INT (FK)
+- referenceObjectId: VARCHAR (50)
+- sourceObjectTypeId : INT (FK)
+- sourceObjectId : VARCHAR (50)
 - requestJson : NVARCHAR (MAX)
 - responseJson : NVARCHAR (MAX)
 - transactionResponse : VARCHAR (MAX)
