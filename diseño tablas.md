@@ -311,18 +311,6 @@
 ==============================================================
 |        			GAME ENGINE (GATHEL)  			         |                                     
 ==============================================================
-
-## Events
-- eventId : INT IDENTITY(1,1) (PK)
-- eventName : VARCHAR(100)
-- description : VARCHAR(255)
-- validFrom : DATETIME2
-- validUntil : DATETIME2
-- isActive : BIT						
-- createdAt : DATETIME2
-- updatedAt : DATETIME2
-- updatedBy : INT (FK)
-
 ## PropositionStates
 - propositionStateId : INT IDENTITY(1,1) (PK)
 - propositionStateName : VARCHAR (40)
@@ -357,6 +345,7 @@
 - updatedAt : DATETIME2
 - updatedBy : INT (FK)
 
+## SEGUN EL PROFE MEJOR ELIMINAR ESTO, Y TRABAJARLO EN EL BACKEND
 ## PropositionRates
 - propositionRateId: BIGINT IDENTITY(1,1) (PK)
 - propositionId: BIGINT (FK)
@@ -390,13 +379,13 @@
 - propositionId : BIGINT (FK)
 - userId : INT (FK)
 - predictionStateId : INT (FK)
-- description : VARCHAR (50)
+- description : VARCHAR (255)
 - predictedOutcome : BIT
 - amountOfPoints: INT
 - amountOfMoney: DECIMAL (18, 6)
 - validFrom : DATETIME2
 - validUntil : DATETIME2
-- isActive : BIT						
+- isActive : BIT
 - createdAt : DATETIME2
 - updatedAt : DATETIME2
 - updatedBy : INT (FK)
