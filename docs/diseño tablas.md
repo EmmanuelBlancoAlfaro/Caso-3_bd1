@@ -370,19 +370,6 @@
 - updatedAt : DATETIME2
 - updatedBy : INT (FK)
 
-
-## SEGUN EL PROFE MEJOR ELIMINAR ESTO, Y TRABAJARLO EN EL BACKEND
-## PropositionRates
--- Se calcula por filas por opción, evitando amarrarse a porcentajes fijos
-- propositionRateId: BIGINT IDENTITY(1,1) (PK)
-- optionId: BIGINT (FK)
-- currentVolume : DECIMAL (18, 6) -- Cantidad total apostada a esta opción
-- currentRate: DECIMAL (6, 3)     -- Multiplicador actual calculado para pagos
-- isActive : BIT						
-- createdAt : DATETIME2
-- updatedAt : DATETIME2
-- updatedBy : INT (FK)
-
 ## PropositionStateHistories
 - historyId : BIGINT IDENTITY (1,1) (PK)
 - propositionId : BIGINT (FK)
