@@ -1,0 +1,2 @@
+-- V1.0 - Creacion del esquema inicial de Gathel
+-- Todas las tablas de la base de datos

@@ -1,0 +1,2 @@
+-- V1.1 - Datos de catalogo iniciales
+-- Paises, monedas, roles, permisos, tipos de eventos, etc.

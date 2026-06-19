@@ -1,0 +1,2 @@
+-- V2.0 - Seeding inicial
+-- 1000 jugadores, 5000 proposiciones, 250000 eventos, pagos
