@@ -8,9 +8,9 @@ Al ejecutarse en tu servidor SQL Server, Flyway busca una tabla de metadatos exc
     4. Los ejecuta cronológicamente y guarda un hash (firma única) de cada script en la tabla para garantizar la inmutabilidad del código aplicado.
 
 ## Como se instala?
-Para SQL Server, el método más limpio e independiente de plataformas (como Java o .NET) es la Interfaz de Línea de Comandos (CLI).
-    1. Descarga: Se obtiene el paquete nativo comprimido en .zip para tu sistema operativo desde el portal de descargas oficial.
-    2. Descompresión: Se extrae en una ruta local fija, por ejemplo, C:\flyway.
+Primero que todo vamos a instalar la version de Redgate Flyway Desktop y Redgate Flyway Command Line (CLI)
+    1. Descarga: Ingresamos a la pagína oficial de descarga de flyway (https://www.red-gate.com/products/flyway/community/download/), aqui se nos solicitará el OS que utilizamos, email, nombre, apellido y base de datos de interes que en nuestro caso es la de SQL server, vamos a crear una carpeta llamada Flyway y vamos a descargarla en esta carpeta en la ubicacion C:\flyway.
+    2. Descompresión: Se extrae en una ruta local fija, en mi caso en la carpeta que creamos C:\flyway .
     3. Variable de Entorno: Se añade dicha ruta al PATH del sistema de Windows para habilitar el comando global flyway.
     4. Dependencias: Las versiones modernas de la CLI de Flyway ya traen embebido el controlador JDBC nativo de Microsoft SQL Server (mssql-jdbc), eliminando la necesidad de buscar librerías externas de conexión.
 
