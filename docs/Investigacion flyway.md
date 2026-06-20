@@ -65,10 +65,6 @@ El comando flyway undo (Licencia Comercial): Permite ejecutar los scripts con pr
 
 Roll-Forward (Licencia Community / Gratuita): En la versión libre, no existe el comando para retroceder de manera automatizada. Siguiendo la filosofía moderna de DevOps de bases de datos, los errores se corrigen yendo hacia adelante. Si la migración V5 rompió algo, la solución consiste en programar un nuevo script V6__Corregir_error_de_V5.sql que altere o devuelva las estructuras a su estado deseado y ejecutar flyway migrate.
 
-## Hallazgos importantes
-
-
-
 ## Referencias de donde se saco esta informacion
 1. https://documentation.red-gate.com/fd/getting-started-with-flyway-184127223.html 
 2. https://www.red-gate.com/products/flyway/
